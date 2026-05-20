@@ -7,11 +7,8 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-
-open_api_key = "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"
-
-##### 전역 설정 (API 서버 연동 및 즉시 로딩을 위해 전역 유지)
-os.environ["OPENAI_API_KEY"] = open_api_key 
+# .env 파일 로드 (이 코드가 API 키를 안전하게 불러옵니다)
+load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
