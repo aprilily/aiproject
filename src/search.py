@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+
 # .env 파일 로드 (이 코드가 API 키를 안전하게 불러옵니다)
 load_dotenv()
 
@@ -31,7 +32,7 @@ llm = ChatOpenAI(
 )
 
 prompt = ChatPromptTemplate.from_template("""
-당신은 청년들을 위한 친절하고 전문적인 세무/정책 가이드 '라마'입니다.
+당신은 청년들을 위한 친절하고 전문적인 세무/정책 가이드입니다.
 아래 제공된 [관련 문서]만을 바탕으로 사용자의 [질문]에 답변하세요.
 
 <규칙>
@@ -52,7 +53,6 @@ def mainStart():
 
     ##### 프로세스 1 - 질의 확장 및 테스트 실행
     test_queries = [
-        "가족 기업 물려받기 하려면 조건이 뭐야?",
         "월세 지원금 받으려면 전입신고 꼭 해야해?",
         "신용카드로 쓴 돈은 무조건 다 소득공제 돼?"
     ]
@@ -82,7 +82,9 @@ def expand_query(user_query: str) -> str:
 FILE_NAME_MAP = {
     "yearend_tax_rag_data_v3.json": "국세청 연말정산 기본 안내",
     "yearend_tax_rag_supplementary.json": "국세청 연말정산 추가 지침서",
-    "youth_housing_welfare_rag_v2.json": "청년 주거복지 정책 가이드"
+    "youth_housing_welfare_rag_v2.json": "청년 주거복지 정책 가이드",
+    "youth_asset_job_policy_rag_2026_v3.json": "청년 자산 형성 및 일자리 지원 정책 가이드",
+    "youth_rent_support_rag_2026_v2.json": "청년 월세 한시 특별지원 안내서"
 }
 
 def get_answer_with_sources(user_query: str):
