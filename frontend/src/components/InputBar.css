@@ -1,0 +1,77 @@
+.input-bar-wrapper {
+  padding: 12px 20px 16px;
+  border-top: 1px solid #eeeeee;
+  background-color: #ffffff;
+  font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+  display: flex;
+  justify-content: center;
+}
+
+.input-bar-inner {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+}
+
+.input-bar {
+  display: flex;
+  align-items: flex-end;
+  background-color: #f6f6f6;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 10px 12px;
+  gap: 10px;
+}
+
+.input-textarea {
+  flex: 1;
+  border: none;
+  background: transparent;
+  resize: none;
+  font-size: 14px;
+  font-family: inherit;
+  color: #222;
+  outline: none;
+  line-height: 1.6;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.input-textarea::placeholder {
+  color: #aaa;
+}
+
+.send-btn {
+  width: 32px;
+  height: 32px;
+  background-color: #3dbd78;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.15s;
+  font-family: inherit;
+}
+
+.send-btn:hover:not(:disabled) {
+  background-color: #2ea866;
+}
+
+.send-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.input-footer {
+  font-size: 11px;
+  color: #bbb;
+  text-align: center;
+  margin-top: 8px;
+  margin-bottom: 0;
+}

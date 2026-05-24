@@ -1,0 +1,50 @@
+import "./LandingPage.css";
+
+const LandingPage = ({ onStart }) => {
+  return (
+    <div className="landing-container">
+      <div className="landing-content">
+        <span className="badge">2026년 최신 정책 반영</span>
+
+        <div className="landing-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"
+              fill="white"
+              opacity="0.3"
+            />
+            <rect x="8" y="10" width="2" height="5" rx="1" fill="white" />
+            <rect x="14" y="8" width="2" height="7" rx="1" fill="white" />
+            <circle cx="9" cy="8.5" r="1.5" fill="white" />
+            <circle cx="15" cy="6.5" r="1.5" fill="white" />
+            <path d="M9 9.5 L15 7.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </div>
+
+        <h1 className="landing-title">
+          청년 금융·주거 정책을<br />쉽게 알아보세요
+        </h1>
+
+        <p className="landing-desc">
+          버팀목 전세대출, 청년미래적금, 월세 지원 등<br />
+          복잡한 정책을 바로 검색하고 출처까지 확인할 수 있어요.
+        </p>
+
+        <button className="start-btn" onClick={onStart}>
+          <span>→</span> 시작하기
+        </button>
+
+        <div className="tag-row">
+          <span className="tag">🏦 금융 정책</span>
+          <span className="tag">🏠 주거 지원</span>
+          <span className="tag">📋 연말정산</span>
+          <span className="tag">📄 출처 확인</span>
+        </div>
+
+        <p className="footer-note">정부 공식 자료 기반 · 로그인 없이 이용 가능</p>
+      </div>
+    </div>
+  );
+};
+
+export default LandingPage;
