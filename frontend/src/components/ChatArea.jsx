@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import MessageBubble from "./MessageBubble";
 import "./ChatArea.css";
 
-const ChatArea = ({ messages, title }) => {
+const ChatArea = ({ messages, title, onSuggestionClick }) => {
   const bottomRef = useRef(null);
   const [showShareMenu, setShowShareMenu] = useState(false);
 
@@ -17,7 +17,7 @@ const ChatArea = ({ messages, title }) => {
   const handleShare = async (platform) => {
     setShowShareMenu(false);
     const shareText = `[청년정책봇] ${title}\n\n도움이 되는 정책 정보를 확인해보세요!`;
-    const shareUrl = window.location.href; // In a real app, this might be a specific chat URL
+    const shareUrl = window.location.href;
 
     if (platform === "native" && navigator.share) {
       try {
@@ -31,21 +31,16 @@ const ChatArea = ({ messages, title }) => {
         console.log("Error sharing natively:", error);
       }
     } else if (platform === "kakao") {
-      // 카카오톡 공유 (Kakao SDK 필요, 현재는 URL Scheme 또는 임시 alert 처리)
       alert("카카오톡 공유 API(Kakao.Link.sendDefault 등) 연동이 필요합니다.");
-      // window.open(`kakaolink://send?...`); 
     } else if (platform === "sms") {
-      // SMS 공유
       window.location.href = `sms:?body=${encodeURIComponent(shareText + "\n" + shareUrl)}`;
     } else if (platform === "copy") {
-      // 클립보드 복사
       navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
         alert("링크가 클립보드에 복사되었습니다.");
       });
     }
   };
 
-  // Close share menu if clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showShareMenu && !event.target.closest('.share-menu-container')) {
@@ -55,7 +50,6 @@ const ChatArea = ({ messages, title }) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showShareMenu]);
-
 
   return (
     <div className="chat-area">
@@ -97,6 +91,8 @@ const ChatArea = ({ messages, title }) => {
               role={msg.role}
               content={msg.content}
               sources={msg.sources}
+              suggestions={msg.suggestions} // 👈 추가됨
+              onSuggestionClick={onSuggestionClick} // 👈 추가됨
             />
           ))}
           <div ref={bottomRef} />

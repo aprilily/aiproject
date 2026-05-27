@@ -7,7 +7,7 @@
 }
 
 .bubble-user {
-  flex-direction: row-reverse;
+   justify-content: flex-end;
 }
 
 .bot-avatar {
@@ -22,20 +22,22 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-top: -2px;
 }
 
 .user-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: #4f7cff;
-  color: white;
+  background-color: #f6f6f6;
+  color: #3dbd78;
   font-size: 11px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-top: -2px;
 }
 
 .bubble {
@@ -53,7 +55,7 @@
 }
 
 .bubble-user-box {
-  background-color: #4f7cff;
+  background-color: #3dbd78;
   color: white;
   border-top-right-radius: 4px;
 }
@@ -67,4 +69,46 @@
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 10px;
+}
+/* 칩들을 감싸는 컨테이너 */
+.bubble-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: center;
+}
+
+/* 개별 추천 칩 스타일 (LandingPage의 태그 느낌) */
+.suggestion-chip {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.suggestion-chip:hover {
+  background-color: #f7fafc;
+  border-color: #3182ce;
+  color: #3182ce;
+  transform: translateY(-1px);
+}
+
+/* 정렬 보조 클래스 */
+.bot-align {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.user-align {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }

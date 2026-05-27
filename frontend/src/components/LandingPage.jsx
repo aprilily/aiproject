@@ -1,6 +1,10 @@
 import "./LandingPage.css";
 
 const LandingPage = ({ onStart }) => {
+  const handleTagClick = (tagText) => {
+    onStart(tagText);
+  };
+
   return (
     <div className="landing-container">
       <div className="landing-content">
@@ -22,23 +26,23 @@ const LandingPage = ({ onStart }) => {
         </div>
 
         <h1 className="landing-title">
-          청년 금융·주거 정책을<br />쉽게 알아보세요
+          청년 정책 검색부터<br />용어 설명까지 한 번에
         </h1>
 
         <p className="landing-desc">
-          버팀목 전세대출, 청년미래적금, 월세 지원 등<br />
-          복잡한 정책을 바로 검색하고 출처까지 확인할 수 있어요.
+          금융 . 주거 정책 지원 정보와 어려운 세무 용어를<br />
+          쉽고 빠르게 찾아드려요.
         </p>
 
-        <button className="start-btn" onClick={onStart}>
+        <button className="start-btn" onClick={() => onStart()}>
           <span>→</span> 시작하기
         </button>
 
         <div className="tag-row">
-          <span className="tag">🏦 금융 정책</span>
-          <span className="tag">🏠 주거 지원</span>
-          <span className="tag">📋 연말정산</span>
-          <span className="tag">📄 출처 확인</span>
+          <span className="tag" onClick={() => handleTagClick("🏦 금융 정책")}>🏦 금융 정책</span>
+          <span className="tag" onClick={() => handleTagClick("🏠 주거 지원")}>🏠 주거 지원</span>
+          <span className="tag" onClick={() => handleTagClick("📋 용어 검색")}>📋 용어 검색</span>
+          <span className="tag" onClick={() => handleTagClick("📄 출처 확인")}>📄 출처 확인</span>
         </div>
 
         <p className="footer-note">정부 공식 자료 기반 · 로그인 없이 이용 가능</p>

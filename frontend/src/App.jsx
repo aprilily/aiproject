@@ -5,16 +5,33 @@ import "./App.css";
 
 function App() {
   const [started, setStarted] = useState(false);
+  const [initialMessage, setInitialMessage] = useState(null);
+
+  const handleStart = (message = null) => {
+    if (message) {
+      setInitialMessage(message);
+    } else {
+      setInitialMessage(null);
+    }
+    setStarted(true);
+  };
+
+  const handleGoHome = () => {
+    setStarted(false);
+    setInitialMessage(null);
+  };
 
   return (
     <div className="app">
       {!started ? (
-        <LandingPage onStart={() => setStarted(true)} />
+        <LandingPage onStart={handleStart} />
       ) : (
-        <ChatLayout />
+        <ChatLayout onGoHome={handleGoHome} initialMessage={initialMessage} />
       )}
     </div>
   );
 }
 
 export default App;
+
+//
