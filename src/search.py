@@ -1,6 +1,8 @@
 from datetime import datetime
 import os
 import pandas as pd
+import json
+import ast
 from qdrant_client import QdrantClient
 from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
@@ -16,16 +18,29 @@ DATA_DIR = os.path.join(BASE_DIR, 'data')
 DB_DIR = os.path.join(BASE_DIR, 'qdrant_db_local')
 
 ##### 1. 세무 용어 사전 로드 (Query Expansion 용)
-df_glossary = pd.read_csv(os.path.join(DATA_DIR, 'tax_glossary.csv'))
-easy_to_term = dict(zip(df_glossary['순화어'], df_glossary['용어']))
+try:
+    df_glossary = pd.read_csv(os.path.join(DATA_DIR, 'tax_glossary.csv'))
+    easy_to_term = dict(zip(df_glossary['순화어'], df_glossary['용어']))
+except FileNotFoundError:
+    print("⚠️ tax_glossary.csv 파일을 찾을 수 없어 용어 확장을 건너뜁니다.")
+    easy_to_term = {}
 
-##### 2. 임베딩 모델 및 Qdrant DB 연결
+##### 2. 출처 링크 JSON 로드 (안전한 절대 경로 사용 및 예외 처리)
+source_links_path = os.path.join(DATA_DIR, 'source_links.json')
+try:
+    with open(source_links_path, "r", encoding="utf-8") as f:
+        SOURCE_INFO_MAP = json.load(f)
+except FileNotFoundError:
+    print(f"⚠️ {source_links_path} 파일을 찾을 수 없습니다. 빈 링크 맵을 사용합니다.")
+    SOURCE_INFO_MAP = {}
+
+##### 3. 임베딩 모델 및 Qdrant DB 연결
 print("BGE-M3 모델 로딩 중...")
 embed_model = SentenceTransformer('BAAI/bge-m3')
 qdrant_client = QdrantClient(path=DB_DIR)
 collection_name = "tax_youth_policy"
 
-##### 3. LLM 세팅 (GPT-4o) 및 프롬프트 템플릿 설계
+##### 4. LLM 세팅 (GPT-4o) 및 프롬프트 템플릿 설계
 llm = ChatOpenAI(
     temperature=0,
     model_name="gpt-4o"
@@ -48,6 +63,111 @@ prompt = ChatPromptTemplate.from_template("""
 """)
 
 
+def expand_query(user_query: str) -> str:
+    """사용자 질문에 순화어가 있으면 전문 용어를 덧붙여 검색 퀄리티를 높임"""
+    expanded_query = user_query
+    for easy, term in easy_to_term.items():
+        if str(easy) in user_query and str(easy) != 'nan':
+            expanded_query += f" {term}"
+    return expanded_query
+
+def get_answer_with_sources(user_query: str):
+    ##### 1. 쿼리 확장 및 벡터 DB 검색
+    expanded_query = expand_query(user_query)
+    query_vector = embed_model.encode(expanded_query).tolist()
+    search_results = qdrant_client.query_points(
+        collection_name=collection_name,
+        query=query_vector,
+        limit=3 
+    ).points
+
+    # 🤖 1. AI 라우터 프롬프트 강화 (정확도 상승 및 1개 이상 강제)
+    url_router_prompt = ChatPromptTemplate.from_template("""
+    당신은 텍스트의 문맥을 깊이 분석하여 가장 적절한 URL과 제목을 매핑하는 최고 수준의 데이터 라우터입니다.
+    아래 [참조 문서]를 읽고, https://dict.naver.com/에서 문맥상 가장 연관성이 높은 항목을 찾아내세요.
+
+    <핵심 규칙>
+    1. 무조건 1개 이상의 링크를 찾아야 합니다. (문서에 직접적인 단어가 없더라도, 내용(예: 세금, 주거, 적금 등)을 바탕으로 가장 관련 깊은 정책이나 주관 기관을 유추하여 무조건 선택하세요.)
+    2. 반드시 다음과 같은 유효한 JSON 배열 형식으로만 출력하세요: [{{"title": "사전에 적힌 키워드명", "url": "해당 URL"}}]
+    3. 마크다운 기호(```json 등)나 부가 설명은 절대 포함하지 마세요.
+
+    [참조 문서]
+    주제: {topic}
+    출처: {source}
+    내용: {content}
+
+    [https://dict.naver.com/](https://dict.naver.com/)
+    {url_dict}
+    """)
+    url_chain = url_router_prompt | llm | StrOutputParser()
+
+    ##### 2. 검색 결과(출처)를 사전 형태로 정리
+    sources_list = []
+    context_str = ""
+    for res in search_results:
+        payload = res.payload
+        
+        raw_source_text = payload.get('source', '공공 세무/정책 데이터베이스')
+        topic_text = payload.get('topic', '')
+        content_text = payload.get('content', '')
+        
+        try:
+            ai_selected_str = url_chain.invoke({
+                "topic": topic_text,
+                "source": raw_source_text,
+                "content": content_text,
+                "url_dict": json.dumps(SOURCE_INFO_MAP, ensure_ascii=False)
+            })
+            
+            cleaned_str = ai_selected_str.replace("```json", "").replace("```", "").strip()
+            best_matched_links = json.loads(cleaned_str)
+            
+            if not isinstance(best_matched_links, list):
+                best_matched_links = []
+                
+        except Exception as e:
+            print(f"⚠️ URL 매칭 중 오류 발생: {e}")
+            best_matched_links = []
+
+        # 🛡️ 2. Fallback: AI가 실패하거나 빈 배열을 주면 무조건 1개 강제 할당
+        if len(best_matched_links) == 0:
+            # 1순위: 주거/월세/주택 관련 내용인지 먼저 확인
+            if "월세" in topic_text or "주거" in topic_text or "전세" in topic_text or "주택" in topic_text or "임차" in topic_text:
+                best_matched_links = [{"title": "마이홈포털 (주거/월세 정책)", "url": "https://www.myhome.go.kr"}]
+            # 2순위: 금융/자산/적금 관련 내용인지 확인
+            elif "적금" in topic_text or "도약계좌" in topic_text or "자산" in topic_text or "저축" in topic_text:
+                best_matched_links = [{"title": "서민금융진흥원 (청년자산형성)", "url": "https://ylaccount.kinfa.or.kr"}]
+            # 3순위: 위 두 개가 아니면, 연말정산이나 세금/소득 관련 내용으로 처리
+            elif "연말정산" in topic_text or "세금" in topic_text or "소득" in topic_text or "공제" in topic_text:
+                best_matched_links = [{"title": "국세청 (연말정산/소득공제 안내)", "url": "https://www.nts.go.kr/nts/cm/cntnts/cntntsView.do?cntntsId=238910&mi=40296"}]
+            # 4순위: 그래도 모르겠으면 만능 복지 포털로 보냄
+            else:
+                best_matched_links = [{"title": "복지로 (청년 맞춤형 복지)", "url": "https://www.bokjiro.go.kr"}]
+
+        sources_list.append({
+            "주제": topic_text,
+            "출처파일명": raw_source_text, 
+            "links": best_matched_links, # 무조건 1개 이상의 링크가 담겨있음이 보장됨!
+            "원문내용": content_text
+        })
+        
+        context_str += f"[출처: {raw_source_text} - {topic_text}]\n{content_text}\n\n"
+
+    ##### 3. LCEL을 이용한 체인 생성 및 최종 LLM 답변 추출
+    chain = prompt | llm | StrOutputParser()
+    answer = chain.invoke({"context": context_str, "question": user_query})
+
+    ##### 4. 정답과 출처 데이터를 한 번에 반환
+    return {
+        "answer": answer,
+        "sources": sources_list
+    }
+
+def getCurrentTimeStr():
+    currentTimeStr = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+    return f"[{currentTimeStr}]"
+
+
 def mainStart():
     print(getCurrentTimeStr(), "mainStart() is started...")
 
@@ -67,71 +187,7 @@ def mainStart():
     print(getCurrentTimeStr(), "mainStart() is finished...")
 
 
-def expand_query(user_query: str) -> str:
-    """사용자 질문에 순화어가 있으면 전문 용어를 덧붙여 검색 퀄리티를 높임"""
-    expanded_query = user_query
-    for easy, term in easy_to_term.items():
-        if str(easy) in user_query and str(easy) != 'nan':
-            expanded_query += f" {term}"
-    return expanded_query
-
-
-# ==========================================
-# 보안 및 UI 개선용 파일명 매핑 딕셔너리 추가
-# ==========================================
-FILE_NAME_MAP = {
-    "yearend_tax_rag_data_v3.json": "국세청 연말정산 기본 안내",
-    "yearend_tax_rag_supplementary.json": "국세청 연말정산 추가 지침서",
-    "youth_housing_welfare_rag_v2.json": "청년 주거복지 정책 가이드",
-    "youth_asset_job_policy_rag_2026_v3.json": "청년 자산 형성 및 일자리 지원 정책 가이드",
-    "youth_rent_support_rag_2026_v2.json": "청년 월세 한시 특별지원 안내서"
-}
-
-def get_answer_with_sources(user_query: str):
-    ##### 1. 쿼리 확장 및 벡터 DB 검색
-    expanded_query = expand_query(user_query)
-    query_vector = embed_model.encode(expanded_query).tolist()
-    search_results = qdrant_client.query_points(
-        collection_name=collection_name,
-        query=query_vector,
-        limit=3 
-    ).points
-
-    ##### 2. 검색 결과(출처)를 사전(JSON) 형태로 정리
-    sources_list = []
-    context_str = ""
-    for res in search_results:
-        payload = res.payload
-        raw_filename = payload.get('source_file')
-        
-        # 🛡️ 핵심: 실제 파일명 대신 깔끔한 공식 명칭으로 변환 (사전에 없으면 기본값 사용)
-        safe_filename = FILE_NAME_MAP.get(raw_filename, "공공 세무/정책 데이터베이스")
-
-        # 프론트엔드에 보낼 데이터
-        sources_list.append({
-            "주제": payload.get('topic'),
-            "출처파일명": safe_filename, # 변환된 안전한 이름 사용
-            "원문내용": payload.get('content')
-        })
-        # LLM에게 줄 텍스트 데이터 (LLM에게도 파일명 대신 안전한 이름 제공)
-        context_str += f"[출처: {safe_filename} - {payload.get('topic')}]\n{payload.get('content')}\n\n"
-
-    ##### 3. LCEL을 이용한 체인 생성 및 LLM 답변 추출
-    chain = prompt | llm | StrOutputParser()
-    answer = chain.invoke({"context": context_str, "question": user_query})
-
-    ##### 4. 정답과 출처 데이터를 한 번에 반환
-    return {
-        "answer": answer,
-        "sources": sources_list
-    }
-
-def getCurrentTimeStr():
-    currentTimeStr = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-    return f"[{currentTimeStr}]"
-
 if __name__ == "__main__":
-
     start_time = datetime.now()
     print(getCurrentTimeStr(), "main Start..")
     #############
