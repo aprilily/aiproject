@@ -123,10 +123,13 @@ const ChatLayout = ({ onGoHome, initialMessage }) => {
       if (data.status === "success") {
         botContent = data.answer;
         if (data.sources && Array.isArray(data.sources)) {
-          botSources = data.sources.map((source) => ({
-            label: source.출처파일명 || "출처",
-            href: "#",
-          }));
+          botSources = data.sources.map((source) => {
+            const link = source.links && source.links.length > 0 ? source.links[0] : null;
+            return {
+              label: source.출처파일명 || link?.title || source.주제 || "출처",
+              href: link?.url || "#",
+            };
+          });
         }
       } else {
         botContent = data.message || "오류가 발생했습니다.";
