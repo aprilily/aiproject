@@ -16,3 +16,7 @@ qdrant_db_local/
 # 5. 맥/윈도우 OS 시스템 파일
 .DS_Store
 Thumbs.db
+
+# 6. 프론트엔드 패키지 (npm install로 재생성)
+node_modules/
+frontend/node_modules/

@@ -1,18 +1,29 @@
 🚀 전체 시스템 실행 방법
 0. 인스톨
-pip install pandas qdrant-client sentence-transformers langchain langchain-openai fastapi uvicorn pydantic streamlit requests
+pip install pandas qdrant-client sentence-transformers langchain langchain-openai fastapi uvicorn pydantic python-dotenv requests
+
+0-1️⃣ 최초 1회만 실행: 데이터 임베딩 및 DB 구축
+⚠️ 이 단계는 처음 세팅할 때 딱 한 번만 실행합니다. 이미 qdrant_db_local 폴더가 생성되어 있다면 건너뛰세요.
+
+현재 위치가 프로젝트 최상위 폴더인지 확인한 후 아래 명령어를 실행합니다.
+
+Bash
+python src/ingest.py
+
+터미널에 "데이터 적재 완료! 총 219개의 청크가 저장되었습니다." 메시지가 뜨면 성공입니다.
+(BGE-M3 모델 다운로드로 인해 처음 실행 시 시간이 다소 소요될 수 있습니다.)
 
 1️⃣ 첫 번째 터미널: 백엔드 서버 켜기 (AI 두뇌)
 VS Code (또는 사용하는 에디터)에서 터미널을 엽니다.
 
-현재 위치가 프로젝트 최상위 폴더(my_rag_project 또는 univ_project2)인지 확인합니다.
+현재 위치가 프로젝트 최상위 폴더인지 확인합니다.
 
 이전에 만들어둔 가상환경((.venv))이 잘 활성화되어 있는지 확인해 주세요! (안 되어 있다면 Activate.ps1 스크립트를 먼저 실행하셔야 합니다.)
 
 아래 명령어를 복사해서 붙여넣고 엔터를 칩니다.
 
 Bash
-python -m uvicorn api.main:app --reload
+python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
 터미널 창에 초록색으로 Application startup complete. 메시지가 뜨면 백엔드가 성공적으로 켜진 것입니다.
 
 주의: 이 터미널 창은 절대 끄면 안 됩니다. 이대로 최소화하거나 가만히 둡니다.
@@ -20,12 +31,14 @@ python -m uvicorn api.main:app --reload
 2️⃣ 두 번째 터미널: 프론트엔드 서버 켜기 (UI 화면)
 VS Code 터미널 창의 우측 상단에 있는 + 버튼 (또는 Split Terminal 버튼)을 눌러서 새로운 터미널 창을 하나 더 엽니다. (이제 터미널 창이 2개가 되었습니다!)
 
-새로 연 터미널 창에서도 역시 가상환경((.venv))이 켜져 있는지 꼭 확인해 주세요.
-
-방금 만들어둔 frontend/app.py 파일을 실행합니다.
+새로 연 터미널 창에서 frontend 폴더로 이동한 후 아래 명령어를 실행합니다.
+(처음 실행하는 경우 npm install을 먼저 한 번 실행해 주세요.)
 
 Bash
-python -m streamlit run frontend/app.py
+cd frontend
+npm install   # 최초 1회만
+npm run dev
 
 3️⃣ 웹 브라우저에서 서비스 확인하기
-3번 명령어를 치는 순간, 시스템 기본 웹 브라우저가 자동으로 새 탭을 열면서 http://localhost:8501 주소로 이동할 겁니다.
+터미널에 http://localhost:5173 주소가 뜨면 성공입니다.
+브라우저를 열고 http://localhost:5173 으로 접속하면 서비스를 이용할 수 있습니다.
