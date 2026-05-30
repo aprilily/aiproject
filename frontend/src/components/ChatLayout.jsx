@@ -123,13 +123,32 @@ const ChatLayout = ({ onGoHome, initialMessage }) => {
       if (data.status === "success") {
         botContent = data.answer;
         if (data.sources && Array.isArray(data.sources)) {
-          botSources = data.sources.map((source) => {
-            const link = source.links && source.links.length > 0 ? source.links[0] : null;
-            return {
-              label: source.출처파일명 || link?.title || source.주제 || "출처",
-              href: link?.url || "#",
-            };
+          const allLinks = [];
+          data.sources.forEach((source) => {
+            if (source.links && Array.isArray(source.links) && source.links.length > 0) {
+              source.links.forEach((link) => {
+                allLinks.push({
+                  label: link.title || source.출처파일명 || source.주제 || "출처",
+                  href: link.url || "#",
+                });
+              });
+            } else {
+              allLinks.push({
+                label: source.출처파일명 || source.주제 || "출처",
+                href: "#",
+              });
+            }
           });
+
+          // URL(또는 라벨)을 기준으로 중복 제거
+          const uniqueMap = new Map();
+          allLinks.forEach((item) => {
+            const key = item.href !== "#" ? item.href : item.label;
+            if (!uniqueMap.has(key)) {
+              uniqueMap.set(key, item);
+            }
+          });
+          botSources = Array.from(uniqueMap.values());
         }
       } else {
         botContent = data.message || "오류가 발생했습니다.";
