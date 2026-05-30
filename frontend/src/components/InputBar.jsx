@@ -1,6 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import "./InputBar.css";
 
+/**
+ * InputBar 컴포넌트
+ * 사용자가 메시지를 입력하고 전송하는 하단 고정 영역입니다.
+ * Shift + Enter를 통한 줄바꿈 및 한글 IME(조합 중) 입력 시 조기 전송 방지 로직이 포함되어 있습니다.
+ * 
+ * @param {Object} props
+ * @param {Function} props.onSend - 메시지 전송 버튼 클릭 또는 Enter 키 입력 시 실행되는 핸들러 (입력된 텍스트 전달)
+ * @param {boolean} props.disabled - 로딩 중이거나 전송이 불가능한 상태일 때 텍스트 입력창 및 버튼 비활성화 처리 여부
+ */
 const InputBar = ({ onSend, disabled }) => {
   const [value, setValue] = useState("");
   const textareaRef = useRef(null);

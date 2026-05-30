@@ -20,6 +20,15 @@ const MOCK_CHATS = {
   }
 };
 
+/**
+ * ChatLayout 컴포넌트
+ * 전체 채팅 화면의 구조(사이드바, 메인 대화 영역, 입력창)를 구성하는 최상위 컴포넌트입니다.
+ * 여러 대화방의 세션 상태 관리 및 백엔드 API와의 통신(fetch POST)을 담당합니다.
+ * 
+ * @param {Object} props
+ * @param {Function} props.onGoHome - 사이드바에서 랜딩 페이지로 돌아갈 때 사용하는 함수
+ * @param {string|null} props.initialMessage - 랜딩 페이지에서 키워드 태그를 클릭해 들어왔을 경우 자동으로 전송할 초기 메시지
+ */
 const ChatLayout = ({ onGoHome, initialMessage }) => {
   const [sessions, setSessions] = useState(MOCK_CHATS);
   const [currentChatId, setCurrentChatId] = useState(1);
