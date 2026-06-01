@@ -20,6 +20,15 @@ const MOCK_CHATS = {
   }
 };
 
+/**
+ * ChatLayout 컴포넌트
+ * 전체 채팅 화면의 구조(사이드바, 메인 대화 영역, 입력창)를 구성하는 최상위 컴포넌트입니다.
+ * 여러 대화방의 세션 상태 관리 및 백엔드 API와의 통신(fetch POST)을 담당합니다.
+ * 
+ * @param {Object} props
+ * @param {Function} props.onGoHome - 사이드바에서 랜딩 페이지로 돌아갈 때 사용하는 함수
+ * @param {string|null} props.initialMessage - 랜딩 페이지에서 키워드 태그를 클릭해 들어왔을 경우 자동으로 전송할 초기 메시지
+ */
 const ChatLayout = ({ onGoHome, initialMessage }) => {
   const [sessions, setSessions] = useState(MOCK_CHATS);
   const [currentChatId, setCurrentChatId] = useState(1);
@@ -123,13 +132,32 @@ const ChatLayout = ({ onGoHome, initialMessage }) => {
       if (data.status === "success") {
         botContent = data.answer;
         if (data.sources && Array.isArray(data.sources)) {
-          botSources = data.sources.map((source) => {
-            const link = source.links && source.links.length > 0 ? source.links[0] : null;
-            return {
-              label: source.출처파일명 || link?.title || source.주제 || "출처",
-              href: link?.url || "#",
-            };
+          const allLinks = [];
+          data.sources.forEach((source) => {
+            if (source.links && Array.isArray(source.links) && source.links.length > 0) {
+              source.links.forEach((link) => {
+                allLinks.push({
+                  label: link.title || source.출처파일명 || source.주제 || "출처",
+                  href: link.url || "#",
+                });
+              });
+            } else {
+              allLinks.push({
+                label: source.출처파일명 || source.주제 || "출처",
+                href: "#",
+              });
+            }
           });
+
+          // URL(또는 라벨)을 기준으로 중복 제거
+          const uniqueMap = new Map();
+          allLinks.forEach((item) => {
+            const key = item.href !== "#" ? item.href : item.label;
+            if (!uniqueMap.has(key)) {
+              uniqueMap.set(key, item);
+            }
+          });
+          botSources = Array.from(uniqueMap.values());
         }
       } else {
         botContent = data.message || "오류가 발생했습니다.";

@@ -2,6 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import MessageBubble from "./MessageBubble";
 import "./ChatArea.css";
 
+/**
+ * ChatArea 컴포넌트
+ * 채팅 메시지 목록이 표시되는 메인 영역입니다.
+ * 자동 스크롤 제어 및 우측 상단의 공유 메뉴 기능을 관리합니다.
+ * 
+ * @param {Object} props
+ * @param {Array} props.messages - 렌더링할 채팅 메시지 객체 배열
+ * @param {string} props.title - 상단 헤더에 표시될 현재 대화방의 제목
+ * @param {Function} props.onSuggestionClick - 메시지 내 추천 키워드(칩) 클릭 시 실행될 콜백 함수
+ */
 const ChatArea = ({ messages, title, onSuggestionClick }) => {
   const bottomRef = useRef(null);
   const [showShareMenu, setShowShareMenu] = useState(false);
@@ -30,8 +40,6 @@ const ChatArea = ({ messages, title, onSuggestionClick }) => {
       } catch (error) {
         console.log("Error sharing natively:", error);
       }
-    } else if (platform === "kakao") {
-      alert("카카오톡 공유 API(Kakao.Link.sendDefault 등) 연동이 필요합니다.");
     } else if (platform === "sms") {
       window.location.href = `sms:?body=${encodeURIComponent(shareText + "\n" + shareUrl)}`;
     } else if (platform === "copy") {
@@ -67,10 +75,7 @@ const ChatArea = ({ messages, title, onSuggestionClick }) => {
                 <div className="share-dropdown-item" onClick={() => handleShare("native")}>
                   <span className="share-icon">📤</span> 다른 앱으로 공유
                 </div>
-                <div className="share-dropdown-item" onClick={() => handleShare("kakao")}>
-                  <span className="share-icon" style={{color: '#FEE500'}}>💬</span> 카카오톡 공유
-                </div>
-                <div className="share-dropdown-item" onClick={() => handleShare("sms")}>
+<div className="share-dropdown-item" onClick={() => handleShare("sms")}>
                   <span className="share-icon">✉️</span> 문자 메시지(SMS)
                 </div>
                 <div className="share-dropdown-item" onClick={() => handleShare("copy")}>
@@ -91,8 +96,8 @@ const ChatArea = ({ messages, title, onSuggestionClick }) => {
               role={msg.role}
               content={msg.content}
               sources={msg.sources}
-              suggestions={msg.suggestions} // 👈 추가됨
-              onSuggestionClick={onSuggestionClick} // 👈 추가됨
+              suggestions={msg.suggestions}
+              onSuggestionClick={onSuggestionClick} 
             />
           ))}
           <div ref={bottomRef} />

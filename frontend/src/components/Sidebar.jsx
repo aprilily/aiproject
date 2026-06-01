@@ -6,6 +6,19 @@ const exampleQuestions = [
   { id: 'ex3', category: '세무 용어', text: '원천징수가 뭐야?' },
 ];
 
+/**
+ * Sidebar 컴포넌트
+ * 좌측 메뉴바를 렌더링하며, 대화 목록 관리 및 예시 질문을 제공합니다.
+ * 
+ * @param {Object} props
+ * @param {Function} props.onNewChat - '새 대화 시작' 버튼 클릭 시 실행될 함수
+ * @param {number} props.currentChatId - 현재 활성화된(보고 있는) 대화방의 고유 ID
+ * @param {Function} props.onSelectChat - 사이드바에서 특정 대화방 클릭 시 실행될 함수
+ * @param {Function} props.onGoHome - '처음으로' 버튼 클릭 시 메인 랜딩 페이지로 돌아가는 함수
+ * @param {Array} props.chats - 최근 대화방 목록 데이터 배열
+ * @param {Function} props.onExampleClick - 예시 질문 클릭 시 대화방에 메시지를 자동 전송하는 함수
+ * @param {Function} props.onClearChats - 대화방 목록을 모두 지우고 초기화하는 함수
+ */
 const Sidebar = ({ onNewChat, currentChatId, onSelectChat, onGoHome, chats, onExampleClick, onClearChats }) => {
   return (
     <aside className="sidebar">

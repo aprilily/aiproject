@@ -1,5 +1,13 @@
 import "./LandingPage.css";
 
+/**
+ * LandingPage 컴포넌트
+ * 서비스 접속 시 처음 표시되는 메인 화면(홈)입니다.
+ * 서비스의 목적을 안내하고, 추천 태그나 시작 버튼을 통해 채팅 화면으로 진입할 수 있도록 돕습니다.
+ * 
+ * @param {Object} props
+ * @param {Function} props.onStart - '시작하기' 버튼 또는 키워드 태그 클릭 시 채팅 화면으로 이동하는 콜백 함수 (선택된 태그 텍스트 전달)
+ */
 const LandingPage = ({ onStart }) => {
   const handleTagClick = (tagText) => {
     onStart(tagText);
